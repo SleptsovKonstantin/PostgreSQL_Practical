@@ -1,94 +1,159 @@
 // const { Walls } = require("../models");
+const { rows } = require("pg/lib/defaults");
 const db = require("../models");
 
 const Wall = db.tutorials;
 
 exports.create = (req, res) => {
   const { text, age, description, owner, country } = req.body;
-  const newText = { text, age, description, owner, country };
-  Wall.create(newText)
-    .then((data) => {
+  if (text && age && description && owner && country) {
+    const newText = { text, age, description, owner, country };
+    Wall.create(newText).then((data) => {
       res.send(data);
-    })
-    .catch((err) => console.log("Error", err));
+    });
+  } else {
+    res.send({
+      message: `Create new task was failing, because body is empty. Please check the data you send.`,
+    });
+  }
 };
 
 exports.findAll = (req, res) => {
-  Wall.findAll()
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => console.log("Error", err));
-};
-
-exports.findTitle = (req, res) => {
-  const { age } = req.params;
-  Wall.findAll({ where: { age: age } })
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => console.log("Error", err));
-};
-
-exports.filter = (req, res) => {
-  const { text, age } = req.body;
-  const textVal = text;
-  const ageVal = age;
-  Wall.findAll({ where: { text: textVal, age: ageVal } })
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => console.log("Error", err));
-};
-
-exports.sort = (req, res) => {
-  const { age } = req.body;
-  const ageVal = age;
   Wall.findAll({
-    order: [["age", ageVal]],
+    order: ["id"],
   })
     .then((data) => {
       res.send(data);
     })
-    .catch((err) => console.log("Error", err));
+    .catch((err) => {
+      res.status(400).send({ message: `id is not in the database` });
+    });
+};
+
+exports.findTitle = (req, res) => {
+  const body = req.body;
+  const key = Object.keys(body);
+  const value = body[key];
+  if (key && value) {
+    Wall.findAll({ where: { [key]: value } })
+      .then((data) => {
+        if (data.length !== 0) {
+          res.send(data);
+        } else {
+          res.send({ message: `Error. invalid  value` });
+        }
+      })
+      .catch((err) => {
+        res.status(400).send({ message: `invalid key ` });
+      });
+  } else {
+    res.send({ message: `Error. not key or value` });
+  }
+};
+
+exports.filter = (req, res) => {
+  const body = req.body;
+  const newArr = Object.keys(body).length;
+  const { text, age } = body;
+  if (text && age && newArr > 1) {
+    Wall.findAll({ where: { text, age } })
+      .then((data) => {
+        if (data.length !== 0) {
+          res.send(data);
+        } else {
+          res.send({ message: `Error. invalid  value` });
+        }
+      })
+      .catch((err) => {
+        res.status(400).send({ message: `invalid key ` });
+      });
+  } else {
+    res.send({ message: `Error. not key or value111` });
+  }
+};
+
+exports.sort = (req, res) => {
+  const body = req.body;
+  const field = Object.keys(body);
+  if (body[field] !== "") {
+    field.push(body[field]);
+    Wall.findAll({
+      order: [field],
+    })
+      .then((data) => {
+        res.send(data);
+      })
+      .catch((err) => {
+        res.status(400).send({
+          message: `Error. 
+        invalid ASC or DESC specified => ${err}`,
+        });
+      });
+  } else {
+    Wall.findAll({
+      order: [field],
+    })
+      .then((data) => {
+        res.send(data);
+      })
+      .catch((err) => {
+        res.status(400).send({ message: `Error => ${err}` });
+      });
+  }
 };
 
 exports.pagination = (req, res) => {
   const { limit, page } = req.body;
-  const limitVal = limit;
   const offset = 0 + (page - 1) * limit;
-  Wall.findAndCountAll({
-    offset: offset,
-    limit: limitVal,
-  })
-    .then((data) => {
-      res.send(data).catch((err) => console.log("Error", err));
+  if (limit && page) {
+    Wall.findAndCountAll({
+      offset,
+      limit,
     })
-    .catch((err) => console.log("Error", err));
+      .then((data) => {
+        res.send(data);
+      })
+      .catch((err) => {
+        res.status(400).send({ message: `Error => ${err}` });
+      });
+  } else {
+    res.status(400).send({ message: `Error. invalid request body` });
+  }
 };
 
 exports.paginationSort = (req, res) => {
   const { age, limit, page } = req.body;
-  const ageVal = age;
-  const limitVal = limit;
   const offset = 0 + (page - 1) * limit;
-  Wall.findAndCountAll({
-    offset: offset,
-    limit: limitVal,
-    order: [["age", ageVal]],
-  })
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((err) => console.log("Error", err));
+  if (age && limit && page) {
+    Wall.findAndCountAll({
+      offset,
+      limit,
+      order: [["age", age]],
+    }).then((data) => {
+      if (data.rows.length > 0) {
+        res.send(data);
+      } else {
+        res.send({ message: `Error. Not page` });
+      }
+    });
+  } else {
+    res.status(400).send({ message: `Error. not val` });
+  }
 };
 
 exports.value = (req, res) => {
-  Wall.findAll({
-    attributes: ["id", "text", "description"],
-  })
-    .then((data) => {
-      res.send(data);
+  const val = req.body;
+  if (val) {
+    Wall.findAll({
+      attributes: val,
     })
-    .catch((err) => console.log("Error", err));
+      .then((data) => {
+        res.send(data);
+      })
+      .catch((err) => {
+        res.status(400).send({ message: `Error. Check val => ${err}` });
+      });
+  } else {
+    res.status(400).send({ message: `Error. not val` });
+  }
 };
