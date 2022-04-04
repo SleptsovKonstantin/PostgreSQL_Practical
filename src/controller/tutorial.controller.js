@@ -1,4 +1,3 @@
-// const { Walls } = require("../models");
 const { rows } = require("pg/lib/defaults");
 const db = require("../models");
 
@@ -36,32 +35,40 @@ exports.findAll = (req, res) => {
 
 exports.findTitle = (req, res) => {
   const body = req.query;
-  Wall.findAll({ where: body })
-    .then((data) => {
-      if (data.length !== 0) {
-        res.send(data);
-      } else {
-        res.send({ message: `Error. invalid  value` });
-      }
-    })
-    .catch((err) => {
-      res.status(400).send({ message: `Error => ${err} ` });
-    });
+  if (Object.keys(body).length !== 0) {
+    Wall.findAll({ where: body })
+      .then((data) => {
+        if (data.length !== 0) {
+          res.send(data);
+        } else {
+          res.send({ message: `Error. invalid  value` });
+        }
+      })
+      .catch((err) => {
+        res.status(400).send({ message: `Error. check key in body=> ${err} ` });
+      });
+  } else {
+    res.status(400).send({ message: `Error. you didn't send data` });
+  }
 };
 
 exports.filter = (req, res) => {
   const body = req.query;
-  Wall.findAll({ where: body })
-    .then((data) => {
-      if (data.length !== 0) {
-        res.send(data);
-      } else {
-        res.send({ message: `Error. invalid  value` });
-      }
-    })
-    .catch((err) => {
-      res.status(400).send({ message: `invalid key. Error => ${err}` });
-    });
+  if (Object.keys(body).length !== 0) {
+    Wall.findAll({ where: body })
+      .then((data) => {
+        if (data.length !== 0) {
+          res.send(data);
+        } else {
+          res.send({ message: `Error. invalid  value` });
+        }
+      })
+      .catch((err) => {
+        res.status(400).send({ message: `invalid key. Error => ${err}` });
+      });
+  } else {
+    res.status(400).send({ message: `Error. you didn't send data` });
+  }
 };
 
 exports.sort = (req, res) => {
@@ -83,8 +90,8 @@ exports.sort = (req, res) => {
 };
 
 exports.pagination = (req, res) => {
-  req.query.limit ? (limit = req.query.limit) : (limit = 7);
-  req.query.page ? (page = req.query.page) : (page = 1);
+  req.query.limit ? (limit = req.query.limit) : (limit = null);
+  req.query.page ? (page = req.query.page) : (page = null);
   const offset = 0 + (page - 1) * limit;
   Wall.findAndCountAll({
     offset,
@@ -99,8 +106,8 @@ exports.pagination = (req, res) => {
 };
 
 exports.paginationSort = (req, res) => {
-  req.query.limit ? (limit = req.query.limit) : (limit = 7);
-  req.query.page ? (page = req.query.page) : (page = 1);
+  req.query.limit ? (limit = req.query.limit) : (limit = null);
+  req.query.page ? (page = req.query.page) : (page = null);
   const offset = 0 + (page - 1) * limit;
   Wall.findAndCountAll({
     offset,
@@ -121,14 +128,13 @@ exports.paginationSort = (req, res) => {
 
 exports.value = (req, res) => {
   const val = req.body;
-    Wall.findAll({
-      attributes: val,
+  Wall.findAll({
+    attributes: val,
+  })
+    .then((data) => {
+      res.send(data);
     })
-      .then((data) => {
-        res.send(data);
-      })
-      .catch((err) => {
-        res.status(400).send({ message: `Error. Check val => ${err}` });
-      });
-
+    .catch((err) => {
+      res.status(400).send({ message: `Error. Check val => ${err}` });
+    });
 };
