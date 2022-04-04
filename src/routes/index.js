@@ -9,7 +9,7 @@ module.exports = (app) => {
   router.get("/sort", tutorialControllers.sort);
   router.get("/pagination", tutorialControllers.pagination);
   router.get("/paginationSort", tutorialControllers.paginationSort);
-  router.get("/value/", tutorialControllers.value);
+  router.get("/value", tutorialControllers.value);
 
   app.use("/api/wall", router);
 };

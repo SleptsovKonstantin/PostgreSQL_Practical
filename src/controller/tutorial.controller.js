@@ -8,9 +8,13 @@ exports.create = (req, res) => {
   const { text, age, description, owner, country } = req.body;
   if (text && age && description && owner && country) {
     const newText = { text, age, description, owner, country };
-    Wall.create(newText).then((data) => {
-      res.send(data);
-    });
+    Wall.create(newText)
+      .then((data) => {
+        res.send(data);
+      })
+      .catch((err) => {
+        res.status(400).send({ message: `invalid key ` });
+      });
   } else {
     res.send({
       message: `Create new task was failing, because body is empty. Please check the data you send.`,
@@ -31,119 +35,92 @@ exports.findAll = (req, res) => {
 };
 
 exports.findTitle = (req, res) => {
-  const body = req.body;
-  const key = Object.keys(body);
-  const value = body[key];
-  if (key && value) {
-    Wall.findAll({ where: { [key]: value } })
-      .then((data) => {
-        if (data.length !== 0) {
-          res.send(data);
-        } else {
-          res.send({ message: `Error. invalid  value` });
-        }
-      })
-      .catch((err) => {
-        res.status(400).send({ message: `invalid key ` });
-      });
-  } else {
-    res.send({ message: `Error. not key or value` });
-  }
+  const body = req.query;
+  Wall.findAll({ where: body })
+    .then((data) => {
+      if (data.length !== 0) {
+        res.send(data);
+      } else {
+        res.send({ message: `Error. invalid  value` });
+      }
+    })
+    .catch((err) => {
+      res.status(400).send({ message: `Error => ${err} ` });
+    });
 };
 
 exports.filter = (req, res) => {
-  const body = req.body;
-  const newArr = Object.keys(body).length;
-  const { text, age } = body;
-  if (text && age && newArr > 1) {
-    Wall.findAll({ where: { text, age } })
-      .then((data) => {
-        if (data.length !== 0) {
-          res.send(data);
-        } else {
-          res.send({ message: `Error. invalid  value` });
-        }
-      })
-      .catch((err) => {
-        res.status(400).send({ message: `invalid key ` });
-      });
-  } else {
-    res.send({ message: `Error. not key or value111` });
-  }
+  const body = req.query;
+  Wall.findAll({ where: body })
+    .then((data) => {
+      if (data.length !== 0) {
+        res.send(data);
+      } else {
+        res.send({ message: `Error. invalid  value` });
+      }
+    })
+    .catch((err) => {
+      res.status(400).send({ message: `invalid key. Error => ${err}` });
+    });
 };
 
 exports.sort = (req, res) => {
   const body = req.body;
-  const field = Object.keys(body);
-  if (body[field] !== "") {
-    field.push(body[field]);
-    Wall.findAll({
-      order: [field],
+  const field = Object.keys(body).length != 0 ? Object.keys(body) : ["id"];
+  body[field] ? field.push(body[field]) : field.push("ASC");
+  Wall.findAll({
+    order: [field],
+  })
+    .then((data) => {
+      res.send(data);
     })
-      .then((data) => {
-        res.send(data);
-      })
-      .catch((err) => {
-        res.status(400).send({
-          message: `Error. 
+    .catch((err) => {
+      res.status(400).send({
+        message: `Error. 
         invalid ASC or DESC specified => ${err}`,
-        });
       });
-  } else {
-    Wall.findAll({
-      order: [field],
-    })
-      .then((data) => {
-        res.send(data);
-      })
-      .catch((err) => {
-        res.status(400).send({ message: `Error => ${err}` });
-      });
-  }
+    });
 };
 
 exports.pagination = (req, res) => {
-  const { limit, page } = req.body;
+  req.query.limit ? (limit = req.query.limit) : (limit = 7);
+  req.query.page ? (page = req.query.page) : (page = 1);
   const offset = 0 + (page - 1) * limit;
-  if (limit && page) {
-    Wall.findAndCountAll({
-      offset,
-      limit,
+  Wall.findAndCountAll({
+    offset,
+    limit,
+  })
+    .then((data) => {
+      res.send(data);
     })
-      .then((data) => {
-        res.send(data);
-      })
-      .catch((err) => {
-        res.status(400).send({ message: `Error => ${err}` });
-      });
-  } else {
-    res.status(400).send({ message: `Error. invalid request body` });
-  }
+    .catch((err) => {
+      res.status(400).send({ message: `Error => ${err}` });
+    });
 };
 
 exports.paginationSort = (req, res) => {
-  const { age, limit, page } = req.body;
+  req.query.limit ? (limit = req.query.limit) : (limit = 7);
+  req.query.page ? (page = req.query.page) : (page = 1);
   const offset = 0 + (page - 1) * limit;
-  if (age && limit && page) {
-    Wall.findAndCountAll({
-      offset,
-      limit,
-      order: [["age", age]],
-    }).then((data) => {
+  Wall.findAndCountAll({
+    offset,
+    limit,
+    order: [["age", req.query.age]],
+  })
+    .then((data) => {
       if (data.rows.length > 0) {
         res.send(data);
       } else {
         res.send({ message: `Error. Not page` });
       }
+    })
+    .catch((err) => {
+      res.status(400).send({ message: `Error => ${err}` });
     });
-  } else {
-    res.status(400).send({ message: `Error. not val` });
-  }
 };
 
 exports.value = (req, res) => {
   const val = req.body;
-  if (val) {
     Wall.findAll({
       attributes: val,
     })
@@ -153,7 +130,5 @@ exports.value = (req, res) => {
       .catch((err) => {
         res.status(400).send({ message: `Error. Check val => ${err}` });
       });
-  } else {
-    res.status(400).send({ message: `Error. not val` });
-  }
+
 };
