@@ -35,7 +35,16 @@ exports.findAll = (req, res) => {
 
 exports.findTitle = (req, res) => {
   const body = req.query;
-  if (Object.keys(body).length !== 0) {
+  if (
+    body.hasOwnProperty("id") ||
+    body.hasOwnProperty("text") ||
+    body.hasOwnProperty("age") ||
+    body.hasOwnProperty("description") ||
+    body.hasOwnProperty("owner") ||
+    body.hasOwnProperty("country") ||
+    body.hasOwnProperty("createdAt") ||
+    body.hasOwnProperty("updatedAt")
+  ) {
     Wall.findAll({ where: body })
       .then((data) => {
         if (data.length !== 0) {
@@ -54,7 +63,16 @@ exports.findTitle = (req, res) => {
 
 exports.filter = (req, res) => {
   const body = req.query;
-  if (Object.keys(body).length !== 0) {
+  if (
+    body.hasOwnProperty("id") ||
+    body.hasOwnProperty("text") ||
+    body.hasOwnProperty("age") ||
+    body.hasOwnProperty("description") ||
+    body.hasOwnProperty("owner") ||
+    body.hasOwnProperty("country") ||
+    body.hasOwnProperty("createdAt") ||
+    body.hasOwnProperty("updatedAt")
+  ) {
     Wall.findAll({ where: body })
       .then((data) => {
         if (data.length !== 0) {
@@ -90,12 +108,12 @@ exports.sort = (req, res) => {
 };
 
 exports.pagination = (req, res) => {
-  req.query.limit ? (limit = req.query.limit) : (limit = null);
-  req.query.page ? (page = req.query.page) : (page = null);
-  const offset = 0 + (page - 1) * limit;
+  const {limit, offset} = req.query;
+  const limitVal = limit ? limit : null;
+  const offsetVal = offset ? offset : null; 
   Wall.findAndCountAll({
-    offset,
-    limit,
+    offset: offsetVal, 
+    limit: limitVal
   })
     .then((data) => {
       res.send(data);
@@ -106,12 +124,12 @@ exports.pagination = (req, res) => {
 };
 
 exports.paginationSort = (req, res) => {
-  req.query.limit ? (limit = req.query.limit) : (limit = null);
-  req.query.page ? (page = req.query.page) : (page = null);
-  const offset = 0 + (page - 1) * limit;
+  const {limit, offset} = req.query;
+  const limitVal = limit ? limit : null;
+  const offsetVal = offset ? offset : null; 
   Wall.findAndCountAll({
-    offset,
-    limit,
+    offset: offsetVal, 
+    limit: limitVal,
     order: [["age", req.query.age]],
   })
     .then((data) => {
