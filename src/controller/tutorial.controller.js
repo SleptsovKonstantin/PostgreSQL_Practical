@@ -108,12 +108,12 @@ exports.sort = (req, res) => {
 };
 
 exports.pagination = (req, res) => {
-  const {limit, offset} = req.query;
+  const { limit, offset } = req.query;
   const limitVal = limit ? limit : null;
-  const offsetVal = offset ? offset : null; 
+  const offsetVal = offset ? offset : null;
   Wall.findAndCountAll({
-    offset: offsetVal, 
-    limit: limitVal
+    offset: offsetVal,
+    limit: limitVal,
   })
     .then((data) => {
       res.send(data);
@@ -124,11 +124,11 @@ exports.pagination = (req, res) => {
 };
 
 exports.paginationSort = (req, res) => {
-  const {limit, offset} = req.query;
+  const { limit, offset } = req.query;
   const limitVal = limit ? limit : null;
-  const offsetVal = offset ? offset : null; 
+  const offsetVal = offset ? offset : null;
   Wall.findAndCountAll({
-    offset: offsetVal, 
+    offset: offsetVal,
     limit: limitVal,
     order: [["age", req.query.age]],
   })
@@ -145,14 +145,27 @@ exports.paginationSort = (req, res) => {
 };
 
 exports.value = (req, res) => {
-  const val = req.body;
-  Wall.findAll({
-    attributes: val,
-  })
-    .then((data) => {
-      res.send(data);
+  const body = req.body;
+  if (
+    body.includes("id") ||
+    body.includes("text") ||
+    body.includes("age") ||
+    body.includes("description") ||
+    body.includes("owner") ||
+    body.includes("country") ||
+    body.includes("createdAt") ||
+    body.includes("updatedAt")
+  ) {
+    Wall.findAll({
+      attributes: body,
     })
-    .catch((err) => {
-      res.status(400).send({ message: `Error. Check val => ${err}` });
-    });
+      .then((data) => {
+        res.send(data);
+      })
+      .catch((err) => {
+        res.status(400).send({ message: `Error. Check val => ${err}` });
+      });
+  } else {
+    res.status(400).send({ message: `Error. you didn't send data` });
+  }
 };
